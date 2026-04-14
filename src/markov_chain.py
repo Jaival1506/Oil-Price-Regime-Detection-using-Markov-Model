@@ -1,23 +1,31 @@
 import pandas as pd
+import numpy as np
 
 def create_states(df):
-    conditions = [
-        (df['Returns'] > 0.01),
-        (df['Returns'] < -0.01),
-        (df['Returns'].abs() < 0.005)
-    ]
 
-    choices = ['Bull', 'Bear', 'Stable']
+    # Smooth returns (IMPORTANT)
+    df['Smoothed_Returns'] = df['Returns'].rolling(3).mean()
 
+    df.dropna(inplace=True)
+
+    # Better thresholds (less noise)
     df['State'] = pd.cut(
-        df['Returns'],
-        bins=[-1, -0.01, 0.01, 1],
-        labels=['Bear','Stable','Bull']
+        df['Smoothed_Returns'],
+        bins=[-1, -0.005, 0.005, 1],
+        labels=['Bear', 'Stable', 'Bull']
     )
 
     return df
 
+
 def transition_matrix(df):
+
     df['Next_State'] = df['State'].shift(-1)
-    matrix = pd.crosstab(df['State'], df['Next_State'], normalize='index')
+
+    matrix = pd.crosstab(
+        df['State'],
+        df['Next_State'],
+        normalize='index'
+    )
+
     return matrix
