@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 import os
+from textblob import TextBlob
 
 API_KEY = st.secrets.get("NEWS_API_KEY", os.getenv("NEWS_API_KEY"))
 def get_oil_news(days=5):
@@ -17,12 +18,24 @@ def get_oil_news(days=5):
 
     news_list = []
 
-    for article in articles[:10]:
-        news_list.append({
-            "title": article["title"],
-            "source": article["source"]["name"],
-            "date": article["publishedAt"][:10],
-            "url": article["url"]
-        })
+for article in articles[:10]:
 
-    return pd.DataFrame(news_list)
+    title = article["title"]
+    sentiment = TextBlob(title).sentiment.polarity
+
+    news_list.append({
+        "title": title,
+        "source": article["source"]["name"],
+        "date": article["publishedAt"][:10],
+        "url": article["url"],
+        "sentiment": sentiment
+    })
+
+df = pd.DataFrame(news_list)
+
+if not df.empty:
+    avg_sentiment = df['sentiment'].mean()
+else:
+    avg_sentiment = 0
+
+return df, avg_sentiment

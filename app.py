@@ -279,12 +279,34 @@ elif page == "News Terminal":
 
     days = st.selectbox("Select Time Range", [5, 10])
 
-    news_df = get_oil_news(days)
+    news_df, sentiment_score = get_oil_news(days)
 
+    
+    st.subheader("News Sentiment Score")
+
+    st.metric("Sentiment", round(sentiment_score, 2))
+
+    if sentiment_score > 0.1:
+        st.success("Bullish News Sentiment")
+    elif sentiment_score < -0.1:
+        st.error("Bearish News Sentiment")
+    else:
+        st.warning("Neutral Sentiment")
+
+    st.info("Recent news sentiment can influence oil price regimes and volatility.")
+
+    st.markdown("---")
+
+    
     for _, row in news_df.iterrows():
-        st.markdown(f"### {row['title']}")
+
+        if row['sentiment'] > 0:
+            st.success(row['title'])
+        elif row['sentiment'] < 0:
+            st.error(row['title'])
+        else:
+            st.write(row['title'])
+
         st.write(f"Source: {row['source']} | Date: {row['date']}")
         st.markdown(f"[Read more]({row['url']})")
         st.markdown("---")
-
-        st.info("Recent news sentiment can influence oil price regimes and volatility.")
