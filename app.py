@@ -272,41 +272,29 @@ elif page == "Forecast":
     st.write(list(most_common))
 
 
-
 elif page == "News Terminal":
 
     st.subheader("Oil Market News")
 
     days = st.selectbox("Select Time Range", [5, 10])
 
-    news_df, sentiment_score = get_oil_news(days)
+    news_data = get_oil_news(days)
 
-    
-    st.subheader("News Sentiment Score")
+    for date in sorted(news_data.keys(), reverse=True):
 
-    st.metric("Sentiment", round(sentiment_score, 2))
+        st.markdown(f"## 📅 {date}")
 
-    if sentiment_score > 0.1:
-        st.success("Bullish News Sentiment")
-    elif sentiment_score < -0.1:
-        st.error("Bearish News Sentiment")
-    else:
-        st.warning("Neutral Sentiment")
+        articles = news_data[date][:12]   # limit per day
 
-    st.info("Recent news sentiment can influence oil price regimes and volatility.")
+        for article in articles:
 
-    st.markdown("---")
+            if article['sentiment'] > 0:
+                st.success(article['title'])
+            elif article['sentiment'] < 0:
+                st.error(article['title'])
+            else:
+                st.write(article['title'])
 
-    
-    for _, row in news_df.iterrows():
-
-        if row['sentiment'] > 0:
-            st.success(row['title'])
-        elif row['sentiment'] < 0:
-            st.error(row['title'])
-        else:
-            st.write(row['title'])
-
-        st.write(f"Source: {row['source']} | Date: {row['date']}")
-        st.markdown(f"[Read more]({row['url']})")
-        st.markdown("---")
+            st.write(f"Source: {article['source']}")
+            st.markdown(f"[Read more]({article['url']})")
+            st.markdown("---")
