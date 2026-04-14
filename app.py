@@ -22,7 +22,7 @@ st.title("Oil Market Intelligence System")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast"]
+    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal"]
 )
 
 # ---------------- LOAD ----------------
@@ -269,3 +269,22 @@ elif page == "Forecast":
 
     st.subheader("Most Probable Future States")
     st.write(list(most_common))
+
+
+    from src.news import get_oil_news
+
+elif page == "News Terminal":
+
+    st.subheader("Oil Market News")
+
+    days = st.selectbox("Select Time Range", [5, 10])
+
+    news_df = get_oil_news(days)
+
+    for _, row in news_df.iterrows():
+        st.markdown(f"### {row['title']}")
+        st.write(f"Source: {row['source']} | Date: {row['date']}")
+        st.markdown(f"[Read more]({row['url']})")
+        st.markdown("---")
+
+        st.info("Recent news sentiment can influence oil price regimes and volatility.")
