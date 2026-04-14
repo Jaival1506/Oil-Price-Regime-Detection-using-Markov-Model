@@ -16,6 +16,7 @@ from src.markov_chain import create_states, transition_matrix
 from src.simulation import simulate_multiple_paths
 from src.forecasting import forecast_price, monte_carlo_price
 from src.news import get_oil_news_range
+from src.trading_signals import generate_signal
 
 st.set_page_config(layout="wide")
 
@@ -23,7 +24,7 @@ st.title("Oil Market Intelligence System")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal"]
+    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal","Trading Signals"]
 )
 
 # ---------------- LOAD ----------------
@@ -329,3 +330,10 @@ elif page == "News Terminal":
 
             st.markdown(f"[Read more]({article['url']})")
             st.markdown("---")
+
+
+elif page == "Trading Signals":
+    st.subheader("Trading Signal")
+    st.metric("Signal", signal)
+    st.write(f"Confidence: {round(confidence,2)}")
+    st.write(f"News Sentiment: {round(overall_sentiment,2)}")
