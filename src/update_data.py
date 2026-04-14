@@ -1,4 +1,4 @@
-print("🚀 SCRIPT STARTED")
+print(" SCRIPT STARTED")
 import yfinance as yf
 import pandas as pd
 import os
@@ -14,7 +14,6 @@ def update_brent_data():
     
     df.reset_index(inplace=True)
     df = df[["Date", "Close"]]
-    df.rename(columns={"Close": "Price"}, inplace=True)
 
     
     save_path = os.path.join("data", "brent_data.csv")
