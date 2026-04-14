@@ -276,17 +276,18 @@ elif page == "News Terminal":
 
     st.subheader("Oil Market News")
 
-    days = st.selectbox("Select Time Range", [5, 10])
+    from datetime import date
 
-    news_data = get_oil_news(days)
+    start_date = st.date_input("Start Date", value=date(2026, 4, 10))
+    end_date = st.date_input("End Date", value=date(2026, 4, 14))
+
+    news_data = get_oil_news_range(start_date, end_date)
 
     for date in sorted(news_data.keys(), reverse=True):
 
         st.markdown(f"## 📅 {date}")
 
-        articles = news_data[date][:12]   # limit per day
-
-        for article in articles:
+        for article in news_data[date]:
 
             if article['sentiment'] > 0:
                 st.success(article['title'])
