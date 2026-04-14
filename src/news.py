@@ -48,8 +48,6 @@ def get_oil_news_range(start_date, end_date):
             continue
 
         
-        if not any(s in source_lower for s in allowed_sources):
-            continue
 
         date = published[:10]
 
