@@ -17,7 +17,6 @@ def get_oil_news_range(start_date, end_date):
 
     relevant_keywords = ["oil", "crude", "opec", "energy", "petroleum", "barrel", "supply"]
     bad_words = ["mercedes", "car", "celebrity", "movie", "sports"]
-    allowed_sources = ["reuters", "bloomberg", "cnbc", "financial times", "wsj"]
 
     seen_titles = set()
 
