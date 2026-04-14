@@ -274,28 +274,58 @@ elif page == "Forecast":
 
 elif page == "News Terminal":
 
-    st.subheader("Oil Market News")
+    st.subheader("Oil Market News Intelligence")
 
     from datetime import date
 
+    
     start_date = st.date_input("Start Date", value=date(2026, 4, 10))
     end_date = st.date_input("End Date", value=date(2026, 4, 14))
 
     news_data = get_oil_news_range(start_date, end_date)
 
-    for date in sorted(news_data.keys(), reverse=True):
+    if not news_data:
+        st.warning("No relevant news found for selected range.")
+    
+    
+    for date_key in sorted(news_data.keys(), reverse=True):
 
-        st.markdown(f"## 📅 {date}")
+        st.markdown(f"## {date_key}")
 
-        for article in news_data[date]:
+        articles = news_data[date_key]
 
-            if article['sentiment'] > 0:
-                st.success(article['title'])
-            elif article['sentiment'] < 0:
-                st.error(article['title'])
+        
+        sentiments = [a["sentiment"] for a in articles]
+        avg_sentiment = sum(sentiments) / len(sentiments)
+
+        col1, col2 = st.columns(2)
+
+        col1.metric("Avg Sentiment", round(avg_sentiment, 2))
+
+        if avg_sentiment > 0.1:
+            col2.success("Bullish News Day ")
+        elif avg_sentiment < -0.1:
+            col2.error("Bearish News Day ")
+        else:
+            col2.warning("Neutral News Day ")
+
+        st.markdown("---")
+
+        
+        for article in articles:
+
+            label = article["sentiment_label"]
+            score = article["sentiment"]
+
+            if label == "Bullish":
+                st.success(f"{article['title']}")
+            elif label == "Bearish":
+                st.error(f"{article['title']}")
             else:
-                st.write(article['title'])
+                st.warning(f"{article['title']}")
 
             st.write(f"Source: {article['source']}")
+            st.caption(f"Sentiment Score: {score}")
+
             st.markdown(f"[Read more]({article['url']})")
             st.markdown("---")
