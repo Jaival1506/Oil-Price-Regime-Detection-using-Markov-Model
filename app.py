@@ -15,6 +15,7 @@ from src.feature_engineering import add_supply_shock, add_war_dummy
 from src.markov_chain import create_states, transition_matrix
 from src.simulation import simulate_multiple_paths
 from src.forecasting import forecast_price, monte_carlo_price
+from src.news import get_oil_news
 
 st.set_page_config(layout="wide")
 
@@ -271,7 +272,6 @@ elif page == "Forecast":
     st.write(list(most_common))
 
 
-    from src.news import get_oil_news
 
 elif page == "News Terminal":
 
