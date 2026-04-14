@@ -333,7 +333,18 @@ elif page == "News Terminal":
 
 
 elif page == "Trading Signals":
+
     st.subheader("Trading Signal")
+
+    # Example (replace with your actual values)
+    current_state = "Bull"   # from Markov
+    confidence = 0.7         # probability
+    overall_sentiment = 0.2  # from news
+
+    signal = generate_signal(current_state, confidence, overall_sentiment)
+
     st.metric("Signal", signal)
+
+    st.write(f"Market State: {current_state}")
     st.write(f"Confidence: {round(confidence,2)}")
     st.write(f"News Sentiment: {round(overall_sentiment,2)}")
