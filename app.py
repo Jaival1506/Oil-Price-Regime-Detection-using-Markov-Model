@@ -17,6 +17,7 @@ from src.simulation import simulate_multiple_paths
 from src.forecasting import forecast_price, monte_carlo_price
 from src.news import get_oil_news_range
 from src.trading_signals import generate_signal
+from src.ml_model import prepare_features, train_model, predict_next
 
 st.set_page_config(layout="wide")
 
@@ -24,7 +25,7 @@ st.title("Oil Market Intelligence System")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal","Trading Signals"]
+    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal","Trading Signals","ML Prediction"]
 )
 
 # ---------------- LOAD ----------------
@@ -40,6 +41,11 @@ data = add_supply_shock(data)
 data = add_war_dummy(data)
 
 data = create_states(data)
+ml_data = prepare_features(data)
+
+model = train_model(ml_data)
+
+prediction, probs = predict_next(model, ml_data)
 P = transition_matrix(data)
 
 # CURRENT STATE LOGIC FIX 
@@ -348,3 +354,19 @@ elif page == "Trading Signals":
     st.write(f"Market State: {current_state}")
     st.write(f"Confidence: {round(confidence,2)}")
     st.write(f"News Sentiment: {round(overall_sentiment,2)}")
+
+
+
+elif page == "ML Prediction":
+
+    st.subheader("AI-Based Market Prediction")
+
+    st.metric("Predicted Next Regime", prediction)
+
+    st.write("Prediction Probabilities:")
+
+    st.write({
+        "Bear": round(probs[0], 2),
+        "Stable": round(probs[1], 2),
+        "Bull": round(probs[2], 2)
+    })

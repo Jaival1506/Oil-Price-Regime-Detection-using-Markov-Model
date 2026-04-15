@@ -18,3 +18,17 @@ def generate_signal(state, confidence, sentiment):
 
     else:
         return "HOLD"
+    
+
+all_sentiments = []
+
+for date in news_data:
+    for article in news_data[date]:
+        all_sentiments.append(article["sentiment"])
+
+if all_sentiments:
+    overall_sentiment = sum(all_sentiments) / len(all_sentiments)
+else:
+    overall_sentiment = 0
+
+    signal = generate_signal(current_state, confidence, overall_sentiment)
