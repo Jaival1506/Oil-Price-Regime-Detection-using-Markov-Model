@@ -366,7 +366,7 @@ elif page == "ML Prediction":
     st.write("Prediction Probabilities:")
 
     st.write({
-        "Bear": round(probs[0], 2),
-        "Stable": round(probs[1], 2),
-        "Bull": round(probs[2], 2)
-    })
+    "Bear": round(probs.get("Bear", 0), 2),
+    "Stable": round(probs.get("Stable", 0), 2),
+    "Bull": round(probs.get("Bull", 0), 2)
+})

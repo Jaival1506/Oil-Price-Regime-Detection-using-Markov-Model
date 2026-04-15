@@ -41,4 +41,4 @@ def predict_next(model, df):
     prediction = model.predict(X_latest)[0]
     probs = model.predict_proba(X_latest)[0]
 
-    return prediction, probs
+    return prediction, dict(zip(model.classes_, probs))
