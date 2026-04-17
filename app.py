@@ -86,13 +86,13 @@ if page == "Overview":
 
     st.markdown("### System Capabilities")
     st.success("""
-✔ Regime Detection using Markov Chains  
-✔ AI-Based Prediction (ML Model)  
-✔ Real-Time News Sentiment  
-✔ Trading Signal Generation  
-✔ Monte Carlo Simulation  
-✔ Hypothesis Testing  
-✔ Feature Selection (Ridge & Lasso)  
+- Regime Detection using Markov Chains  
+- AI-Based Prediction (ML Model)  
+- Real-Time News Sentiment  
+- Trading Signal Generation  
+- Monte Carlo Simulation  
+- Hypothesis Testing  
+- Feature Selection (Ridge & Lasso)  
 """)
 
 # DATA 
