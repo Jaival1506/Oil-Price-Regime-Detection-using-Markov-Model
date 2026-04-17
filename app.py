@@ -32,6 +32,12 @@ page = st.sidebar.radio(
  "News Terminal", "Trading Signals", "ML Prediction", "Regularization", "Hypothesis Testing"]
 )
 
+# Global feature engineering
+if "Returns" not in data.columns:
+    data["Returns"] = data["Close"].pct_change()
+
+data["volatility"] = data["Returns"].rolling(5).std()
+
 # ---------------- LOAD ----------------
 brent = load_brent("data/brent_data.csv")
 opec = load_opec("data/OPEC oil production.csv")
@@ -423,13 +429,22 @@ elif page == "Hypothesis Testing":
 
     st.subheader("Market Volatility Hypothesis Test")
 
-    current_vol, mean_vol, p_value = volatility_test(data["volatility"])
+    # Ensure required columns
+    if "Returns" not in data.columns:
+        data["Returns"] = data["Close"].pct_change()
+
+    data["volatility"] = data["Returns"].rolling(5).std()
+
+    # Drop NaN values
+    vol_series = data["volatility"].dropna()
+
+    current_vol, mean_vol, p_value = volatility_test(vol_series)
 
     st.metric("Current Volatility", round(current_vol, 4))
-    st.metric("Historical Mean Volatility", round(mean_vol, 4))
-    st.metric("p-value", round(p_value, 4))
+    st.metric("Mean Volatility", round(mean_vol, 4))
+    st.metric("P-Value", round(p_value, 4))
 
     if p_value < 0.05:
-        st.error("Reject H0 → Market volatility is significantly different")
+        st.error("Significant change in volatility (Reject H0)")
     else:
-        st.success("Fail to Reject H0 → Market is normal")
+        st.success("No significant change (Fail to reject H0)")
