@@ -25,6 +25,16 @@ st.set_page_config(layout="wide")
 
 st.title("Oil Market Intelligence System")
 st.caption("Real-time AI-powered oil market analytics system")
+st.markdown("### System Snapshot")
+st.set_page_config(layout="wide")
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("Price", round(data['Close'].iloc[-1], 2))
+col2.metric("Return %", round(data['Returns'].iloc[-1]*100, 2))
+col3.metric("Volatility", round(data['volatility'].iloc[-1], 4))
+col4.metric("State", current_state)
+
 
 page = st.sidebar.radio(
     "Navigation",
@@ -83,6 +93,17 @@ if page == "Overview":
     - Supply shocks influence regime shifts
     - Global events create structural breaks
     """)
+
+    st.markdown("### System Capabilities")
+    st.success("""
+✔ Regime Detection using Markov Chains  
+✔ AI-Based Prediction (ML Model)  
+✔ Real-Time News Sentiment  
+✔ Trading Signal Generation  
+✔ Monte Carlo Simulation  
+✔ Hypothesis Testing  
+✔ Feature Selection (Ridge & Lasso)  
+""")
 
 # DATA 
 elif page == "Data":
@@ -346,9 +367,8 @@ elif page == "News Terminal":
 # ---------------- TRADING SIGNALS ----------------
 elif page == "Trading Signals":
 
-    st.title("Trading Signal Dashboard")
+    st.subheader("Trading Signal Engine")
 
-    # Generate signal
     signal, state, confidence, sentiment, volatility = generate_signal(data)
 
     col1, col2, col3 = st.columns(3)
@@ -359,33 +379,54 @@ elif page == "Trading Signals":
 
     st.progress(confidence)
 
-    st.subheader("Market Drivers")
+    st.markdown("### Drivers Behind Signal")
 
     col4, col5 = st.columns(2)
 
     col4.metric("News Sentiment", round(sentiment, 2))
     col5.metric("Volatility", round(volatility, 4))
 
-    st.info("Signal combines Markov regime + ML + News Sentiment")
+    # Explanation block (VERY IMPORTANT FOR PPT)
+    st.info(f"""
+    This signal is generated using:
+    - Markov Regime Detection → Current market structure
+    - ML Model → Predicts next state
+    - News Sentiment → Market psychology
+    - Volatility → Risk level
+    """)
 
 
 # ---------------- ML PREDICTION ----------------
 elif page == "ML Prediction":
 
     st.subheader("AI-Based Market Prediction")
+    st.markdown("### Why this prediction?")
+    st.write("""
+- Model detects patterns in returns, volatility, and supply
+- Recent trends indicate transition probability towards this regime
+- Combined with historical behavior of oil markets
+""")
 
-    st.metric("Predicted Next Regime", prediction)
+    col1, col2 = st.columns([1, 2])
 
-    st.subheader("Prediction Probabilities")
+    with col1:
+        st.metric("Predicted Regime", prediction)
 
-    df_probs = probs.to_frame(name="Probability").reset_index()
-    df_probs.columns = ["Regime", "Probability"]
-    
-    st.bar_chart(df_probs.set_index("Regime"))
+        prob_value = float(probs[prediction])
+        st.progress(prob_value)
 
-    prob_value = float(df_probs[df_probs["Regime"] == prediction]["Probability"].values[0])
-    st.progress(prob_value)
+        if prediction == "Bull":
+            st.success("Market expected to move upward")
+        elif prediction == "Bear":
+            st.error("Market expected to decline")
+        else:
+            st.warning("Market likely stable")
 
+    with col2:
+        df_probs = probs.to_frame(name="Probability").reset_index()
+        df_probs.columns = ["Regime", "Probability"]
+
+        st.bar_chart(df_probs.set_index("Regime"))
 
 # ---------------- REGULARIZATION ----------------
 elif page == "Regularization":
