@@ -21,459 +21,149 @@ from src.ml_model import prepare_features, train_model, predict_next
 from src.regularization import run_regularization
 from src.hypothesis import volatility_test
 
+# ---------------- CONFIG ----------------
 st.set_page_config(layout="wide")
 
-st.title("Oil Market Intelligence System")
-st.caption("Real-time AI-powered oil market analytics system")
-
-page = st.sidebar.radio(
-    "Navigation",
-    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast",
- "News Terminal", "Trading Signals", "ML Prediction", "Regularization", "Hypothesis Testing"]
-)
-
-# ---------------- LOAD ----------------
+# ---------------- LOAD DATA ----------------
 brent = load_brent("data/brent_data.csv")
 opec = load_opec("data/OPEC oil production.csv")
 
-data = brent.join(opec, how='left')
-data = data.ffill()
-
+data = brent.join(opec, how='left').ffill()
 data = clean_data(data)
 data = add_returns(data)
 data = add_supply_shock(data)
 data = add_war_dummy(data)
 
 data["volatility"] = data["Returns"].rolling(5).std()
-
 data = create_states(data)
+
 ml_data = prepare_features(data)
-
 model = train_model(ml_data)
-
 prediction, probs = predict_next(model, ml_data)
+
 P = transition_matrix(data)
-
-# CURRENT STATE LOGIC FIX 
 last_state = data['State'].iloc[-1]
-probs = P.loc[last_state]
+current_state = P.loc[last_state].idxmax()
 
-# pick highest probability NEXT state
-current_state = probs.idxmax()
+# ---------------- NAVIGATION ----------------
+page = st.sidebar.radio("Navigation", [
+    "Overview",
+    "Market Snapshot",
+    "Market Regime",
+    "News Intelligence",
+    "AI Prediction",
+    "Trading Signals",
+    "Model Insights",
+    "Hypothesis Testing"
+])
 
-# OVERVIEW 
+# ---------------- OVERVIEW ----------------
 if page == "Overview":
+    st.title("Oil Market Intelligence System")
+    st.caption("AI-powered oil market decision system")
 
     col1, col2, col3 = st.columns(3)
-
-    col1.metric("Latest Price", f"${round(data['Close'].iloc[-1], 2)}")
-    col2.metric("Return (%)", round(data['Returns'].iloc[-1]*100, 2))
-    col3.metric("Market State", current_state)
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', line=dict(color='cyan')))
-    fig.update_layout(template='plotly_dark', title="Oil Price Trend")
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Insights")
-    st.markdown("""
-    - Oil markets follow probabilistic regimes (Bull, Bear, Stable)
-    - Market transitions are driven by probabilities, not randomness
-    - Supply shocks influence regime shifts
-    - Global events create structural breaks
-    """)
-
-    st.markdown("### System Capabilities")
-    st.success("""
-- Regime Detection using Markov Chains  
-- AI-Based Prediction (ML Model)  
-- Real-Time News Sentiment  
-- Trading Signal Generation  
-- Monte Carlo Simulation  
-- Hypothesis Testing  
-- Feature Selection (Ridge & Lasso)  
-""")
-
-# DATA 
-elif page == "Data":
-
-    st.subheader("Brent Dataset")
-    st.dataframe(brent.tail(10))
-
-    st.subheader("OPEC Production Dataset")
-    st.dataframe(opec.tail(10))
-
-# MARKET ANALYSIS 
-elif page == "Market Analysis":
-
-    # Oil Price Trend
-    st.subheader("Oil Price Trend")
+    col1.metric("Price", round(data['Close'].iloc[-1], 2))
+    col2.metric("Returns", round(data['Returns'].iloc[-1], 4))
+    col3.metric("State", current_state)
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', line=dict(color='cyan')))
-    fig.update_layout(template='plotly_dark')
+    fig.add_trace(go.Scatter(x=data.index, y=data['Close']))
     st.plotly_chart(fig, use_container_width=True)
 
-    # Market Regimes
-    st.subheader("Market Regimes")
+# ---------------- MARKET SNAPSHOT ----------------
+elif page == "Market Snapshot":
+    st.subheader("Market Overview")
 
-    colors = {'Bull': 'green', 'Bear': 'red', 'Stable': 'gray'}
+    st.line_chart(data['Close'])
+    st.line_chart(data['Returns'])
+    st.line_chart(data['volatility'])
 
-    fig3 = go.Figure()
+# ---------------- MARKOV MODEL ----------------
+elif page == "Market Regime":
+    st.subheader("Markov Regime Detection")
 
-    for state in data['State'].unique():
-        subset = data[data['State'] == state]
-        fig3.add_trace(go.Scatter(
-            x=subset.index,
-            y=subset['Close'],
-            mode='markers',
-            name=state,
-            marker=dict(color=colors[state], size=4)
-        ))
+    st.metric("Current Regime", current_state)
 
-    fig3.update_layout(template='plotly_dark')
-    st.plotly_chart(fig3, use_container_width=True)
+    fig = px.imshow(P, text_auto=True)
+    st.plotly_chart(fig)
 
-    # FIXED SUPPLY GRAPH 
-    st.subheader("Supply vs Price Relationship")
-
-    fig_sp, ax1 = plt.subplots(figsize=(12,5))
-
-    ax1.plot(data.index, data['Close'], color='cyan')
-    ax1.set_ylabel("Price")
-
-    ax2 = ax1.twinx()
-    ax2.plot(data.index, data['Production'], color='orange', linestyle='--')
-    ax2.set_ylabel("Production")
-
-    st.pyplot(fig_sp)
-
-    # FIXED GLOBAL EVENTS 
-    st.subheader("Global Events Impact")
-    
-    import plotly.graph_objects as go
-    # Ensure datetime index
-    data.index = pd.to_datetime(data.index)
-    fig5 = go.Figure()
-    fig5.add_trace(go.Scatter(
-    x=data.index,
-    y=data['Close'],
-    mode='lines',
-    name='Oil Price',
-    line=dict(color='cyan')
-    ))
-    events = [
-    ("2020-03-01", "COVID Crash", "red"),
-    ("2022-02-24", "Ukraine War", "orange"),
-    ("2026-02-28", "Middle East War", "yellow")
-    ]
-    for date, label, color in events:
-            date = pd.to_datetime(date)   # 🔥 THIS FIXES YOUR ISSUE
-    
-            fig5.add_shape(
-                type="line",
-                x0=date,
-                x1=date,
-                y0=float(data['Close'].min()),
-                y1=float(data['Close'].max()),
-                line=dict(color=color, dash="dash")
-            )
-    
-            fig5.add_annotation(
-                x=date,
-                y=float(data['Close'].max()),
-                text=label,
-                showarrow=True,
-                arrowhead=2
-            )
-    fig5.update_layout(
-    template='plotly_dark',
-    height=500)
-    st.plotly_chart(fig5, use_container_width=True)
-
-# ADD VERTICAL LINES MANUALLY 
-events = [
-    ("2020-03-01", "COVID", "red"),
-    ("2022-02-24", "Ukraine War", "orange"),
-    ("2026-02-28", "Middle East War", "yellow")
-]
-
-# MARKOV MODEL
-if page == "Markov Model":
-
-    st.subheader("Current Market State")
-
-    if current_state == 'Bull':
-        st.success("Bull Market")
-    elif current_state == 'Bear':
-        st.error("Bear Market")
-    else:
-        st.warning("Stable Market")
-
-    st.subheader("Transition Matrix")
-
-    fig6 = px.imshow(P, text_auto=True, color_continuous_scale="Blues")
-    fig6.update_layout(template='plotly_dark')
-    st.plotly_chart(fig6)
-
-    # Accuracy
-    predicted = []
-    actual = data['State'][1:]
-
-    states = ['Bear', 'Stable', 'Bull']
-
-    for i in range(len(data) - 1):
-        current = data['State'].iloc[i]
-        probs = P.loc[current].values
-        predicted.append(states[np.argmax(probs)])
-
-    accuracy = np.mean(np.array(predicted) == actual.values)
-
-    st.subheader("Model Accuracy")
-    st.metric("Accuracy", f"{round(accuracy*100,2)} %")
-
-    # FIXED HEADING 
-    st.subheader("Confusion Matrix")
-
-    conf_matrix = pd.crosstab(
-        pd.Series(predicted, name="Predicted"),
-        pd.Series(actual.values, name="Actual")
-    )
-
-    fig7 = px.imshow(conf_matrix, text_auto=True, color_continuous_scale="RdBu")
-    fig7.update_layout(template='plotly_dark')
-    st.plotly_chart(fig7)
-
-# SIMULATION 
-elif page == "Simulation":
-
-    st.subheader("Monte Carlo State Simulation")
-
-    paths = simulate_multiple_paths(P, current_state, steps=15, n_simulations=100)
-
-    state_map = {'Bear': -1, 'Stable': 0, 'Bull': 1}
-
-    fig8 = go.Figure()
-
-    for path in paths:
-        numeric = [state_map[s] for s in path]
-        fig8.add_trace(go.Scatter(y=numeric, mode='lines', opacity=0.1))
-
-    fig8.update_layout(template='plotly_dark')
-    st.plotly_chart(fig8)
-
-    st.subheader("Monte Carlo Price Simulation")
-
-    price_paths = monte_carlo_price(data, P, steps=15, simulations=100)
-
-    fig9 = go.Figure()
-
-    for path in price_paths:
-        fig9.add_trace(go.Scatter(y=path, mode='lines', opacity=0.1))
-
-    fig9.update_layout(template='plotly_dark')
-    st.plotly_chart(fig9)
-
-# FORECAST 
-elif page == "Forecast":
-
-    st.subheader("15-Day Price Forecast")
-
-    forecast = forecast_price(data, P)
-
-    fig10 = go.Figure()
-    fig10.add_trace(go.Scatter(y=forecast, mode='lines', line=dict(color='cyan')))
-    fig10.update_layout(template='plotly_dark')
-
-    st.plotly_chart(fig10)
-
-    paths = simulate_multiple_paths(P, current_state)
-    df_paths = pd.DataFrame(paths)
-    most_common = df_paths.mode().iloc[0]
-
-    st.subheader("Most Probable Future States")
-    st.write(list(most_common))
-
-
-elif page == "News Terminal":
-
-    st.subheader("Oil Market News Intelligence")
+# ---------------- NEWS ----------------
+elif page == "News Intelligence":
+    st.subheader("Oil News Intelligence")
 
     from datetime import date
-
-    
-    start_date = st.date_input("Start Date", value=date(2026, 4, 10))
-    end_date = st.date_input("End Date", value=date(2026, 4, 14))
+    start_date = st.date_input("Start Date", value=date(2026,4,10))
+    end_date = st.date_input("End Date", value=date(2026,4,14))
 
     news_data = get_oil_news_range(start_date, end_date)
 
-    if not news_data:
-        st.warning("No relevant news found for selected range.")
-    
-    
-    for date_key in sorted(news_data.keys(), reverse=True):
+    for d in sorted(news_data.keys(), reverse=True):
+        st.markdown(f"### {d}")
 
-        st.markdown(f"## {date_key}")
-
-        articles = news_data[date_key]
-
-        
-        sentiments = [a["sentiment"] for a in articles]
-        avg_sentiment = sum(sentiments) / len(sentiments)
-
-        col1, col2 = st.columns(2)
-
-        col1.metric("Avg Sentiment", round(avg_sentiment, 2))
-
-        if avg_sentiment > 0.1:
-            col2.success("Bullish News Day ")
-        elif avg_sentiment < -0.1:
-            col2.error("Bearish News Day ")
-        else:
-            col2.warning("Neutral News Day ")
-
-        st.markdown("---")
-
-        
-        for article in articles:
-
-            label = article["sentiment_label"]
-            score = article["sentiment"]
-
-            if label == "Bullish":
-                st.success(f"{article['title']}")
-            elif label == "Bearish":
-                st.error(f"{article['title']}")
+        for article in news_data[d]:
+            if article["sentiment"] > 0:
+                st.success(article["title"])
+            elif article["sentiment"] < 0:
+                st.error(article["title"])
             else:
-                st.warning(f"{article['title']}")
+                st.write(article["title"])
 
-            st.write(f"Source: {article['source']}")
-            st.caption(f"Sentiment Score: {score}")
-
+            st.caption(article["source"])
             st.markdown(f"[Read more]({article['url']})")
-            st.markdown("---")
 
-# ---------------- TRADING SIGNALS ----------------
+# ---------------- ML ----------------
+elif page == "AI Prediction":
+    st.subheader("AI Prediction")
+
+    st.metric("Next Regime", prediction)
+
+    df_probs = probs.to_frame(name="Probability").reset_index()
+    df_probs.columns = ["Regime", "Probability"]
+
+    st.bar_chart(df_probs.set_index("Regime"))
+
+# ---------------- SIGNALS ----------------
 elif page == "Trading Signals":
-
-    st.subheader("Trading Signal Engine")
+    st.subheader("Trading Signal")
 
     signal, state, confidence, sentiment, volatility = generate_signal(data)
 
     col1, col2, col3 = st.columns(3)
-
     col1.metric("Signal", signal)
-    col2.metric("Market State", state)
-    col3.metric("Confidence", round(confidence, 2))
-
-    st.progress(confidence)
-
-    st.markdown("### Drivers Behind Signal")
-
-    col4, col5 = st.columns(2)
-
-    col4.metric("News Sentiment", round(sentiment, 2))
-    col5.metric("Volatility", round(volatility, 4))
-
-    # Explanation block (VERY IMPORTANT FOR PPT)
-    st.info(f"""
-    This signal is generated using:
-    - Markov Regime Detection → Current market structure
-    - ML Model → Predicts next state
-    - News Sentiment → Market psychology
-    - Volatility → Risk level
-    """)
-
-
-# ---------------- ML PREDICTION ----------------
-elif page == "ML Prediction":
-
-    st.subheader("AI-Based Market Prediction")
-    st.markdown("### Why this prediction?")
-    st.write("""
-- Model detects patterns in returns, volatility, and supply
-- Recent trends indicate transition probability towards this regime
-- Combined with historical behavior of oil markets
-""")
-
-    col1, col2 = st.columns([1, 2])
-
-    with col1:
-        st.metric("Predicted Regime", prediction)
-
-        prob_value = float(probs[prediction])
-        st.progress(prob_value)
-
-        if prediction == "Bull":
-            st.success("Market expected to move upward")
-        elif prediction == "Bear":
-            st.error("Market expected to decline")
-        else:
-            st.warning("Market likely stable")
-
-    with col2:
-        df_probs = probs.to_frame(name="Probability").reset_index()
-        df_probs.columns = ["Regime", "Probability"]
-
-        st.bar_chart(df_probs.set_index("Regime"))
+    col2.metric("State", state)
+    col3.metric("Confidence", round(confidence,2))
 
 # ---------------- REGULARIZATION ----------------
-elif page == "Regularization":
+elif page == "Model Insights":
+    st.subheader("Ridge & Lasso")
 
-    st.subheader("Ridge & Lasso Feature Analysis")
+    data["Regime_Code"] = data["State"].map({"Bear":0,"Stable":1,"Bull":2})
 
-    # Ensure required columns exist
-    data["volatility"] = data["Returns"].rolling(5).std()
+    X = data[["Returns","volatility"]].dropna()
+    y = data.loc[X.index,"Regime_Code"]
 
-    if "Regime_Code" not in data.columns:
-        data["Regime_Code"] = data["State"].map({
-            "Bear": 0,
-            "Stable": 1,
-            "Bull": 2
-        })
+    ridge_df, lasso_df, ridge_alpha, lasso_alpha = run_regularization(X,y)
 
-    features = ["Returns", "volatility"]
-
-    X = data[features].dropna()
-    y = data.loc[X.index, "Regime_Code"]
-
-    ridge_df, lasso_df, ridge_alpha, lasso_alpha = run_regularization(X, y)
-    st.write(f"Best Ridge Alpha: {round(ridge_alpha, 4)}")
-    st.write(f"Best Lasso Alpha: {round(lasso_alpha, 4)}")
+    st.caption(f"Ridge Alpha: {round(ridge_alpha,2)} | Lasso Alpha: {round(lasso_alpha,4)}")
 
     col1, col2 = st.columns(2)
-
-    with col1:
-        st.write("Ridge Regression")
-        st.dataframe(ridge_df)
-
-    with col2:
-        st.write("Lasso Regression")
-        st.dataframe(lasso_df)
-
+    col1.dataframe(ridge_df)
+    col2.dataframe(lasso_df)
 
 # ---------------- HYPOTHESIS ----------------
 elif page == "Hypothesis Testing":
+    st.subheader("Volatility Hypothesis Test")
 
-    st.subheader("Market Volatility Hypothesis Test")
+    vol = data["volatility"].dropna()
 
-    # Ensure required columns
-    if "Returns" not in data.columns:
-        data["Returns"] = data["Close"].pct_change()
+    current_vol, mean_vol, p_value = volatility_test(vol)
 
-    data["volatility"] = data["Returns"].rolling(5).std()
-
-    # Drop NaN values
-    vol_series = data["volatility"].dropna()
-
-    current_vol, mean_vol, p_value = volatility_test(vol_series)
-
-    st.metric("Current Volatility", round(current_vol, 4))
-    st.metric("Mean Volatility", round(mean_vol, 4))
-    st.metric("P-Value", round(p_value, 4))
+    st.metric("Current Vol", round(current_vol,4))
+    st.metric("Mean Vol", round(mean_vol,4))
+    st.metric("P-Value", round(p_value,4))
 
     if p_value < 0.05:
-        st.error("Significant change in volatility (Reject H0)")
+        st.error("Significant change")
     else:
-        st.success("No significant change (Fail to reject H0)")
+        st.success("No significant change")
