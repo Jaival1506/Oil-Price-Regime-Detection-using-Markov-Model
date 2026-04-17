@@ -360,14 +360,12 @@ col5.metric("Volatility", round(volatility, 4))
 
 st.info("Signal combines Markov regime + ML + News Sentiment")
 
-
 elif page == "ML Prediction":
+st.subheader("AI-Based Market Prediction")
 
-    st.subheader("AI-Based Market Prediction")
+st.metric("Predicted Next Regime", prediction)
 
-    st.metric("Predicted Next Regime", prediction)
-
-    st.subheader("Prediction Probabilities")
+st.subheader("Prediction Probabilities")
 
 df_probs = pd.DataFrame({
     "Regime": list(probs.keys()),
