@@ -376,14 +376,12 @@ elif page == "ML Prediction":
 
     st.subheader("Prediction Probabilities")
 
-    df_probs = pd.DataFrame({
-        "Regime": list(probs.keys()),
-        "Probability": list(probs.values())
-    })
+df_probs = probs.reset_index()
+df_probs.columns = ["Regime", "Probability"]
 
-    st.bar_chart(df_probs.set_index("Regime"))
+st.bar_chart(df_probs.set_index("Regime"))
 
-    st.progress(probs.get(prediction, 0))
+st.progress(float(df_probs[df_probs["Regime"] == prediction]["Probability"].values[0]))
 
 
 # ---------------- REGULARIZATION ----------------
