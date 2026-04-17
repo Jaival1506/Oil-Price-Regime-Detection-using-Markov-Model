@@ -22,6 +22,7 @@ from src.ml_model import prepare_features, train_model, predict_next
 st.set_page_config(layout="wide")
 
 st.title("Oil Market Intelligence System")
+st.caption("Real-time AI-powered oil market analytics system")
 
 page = st.sidebar.radio(
     "Navigation",
@@ -340,21 +341,24 @@ elif page == "News Terminal":
 
 elif page == "Trading Signals":
 
-    st.subheader("Trading Signal")
+   st.title("📊 Trading Signal Dashboard")
 
-    # Example (replace with your actual values)
-    current_state = "Bull"   # from Markov
-    confidence = 0.7         # probability
-    overall_sentiment = 0.2  # from news
+col1, col2, col3 = st.columns(3)
 
-    signal = generate_signal(current_state, confidence, overall_sentiment)
+col1.metric("Signal", signal)
+col2.metric("Market State", state)
+col3.metric("Confidence", round(confidence, 2))
 
-    st.metric("Signal", signal)
+st.progress(confidence)
 
-    st.write(f"Market State: {current_state}")
-    st.write(f"Confidence: {round(confidence,2)}")
-    st.write(f"News Sentiment: {round(overall_sentiment,2)}")
+st.subheader("📊 Market Drivers")
 
+col4, col5 = st.columns(2)
+
+col4.metric("News Sentiment", round(sentiment, 2))
+col5.metric("Volatility", round(volatility, 4))
+
+st.info("Signal combines Markov regime + ML + News Sentiment")
 
 
 elif page == "ML Prediction":
@@ -363,10 +367,13 @@ elif page == "ML Prediction":
 
     st.metric("Predicted Next Regime", prediction)
 
-    st.write("Prediction Probabilities:")
+    st.subheader("Prediction Probabilities")
 
-    st.write({
-    "Bear": round(probs.get("Bear", 0), 2),
-    "Stable": round(probs.get("Stable", 0), 2),
-    "Bull": round(probs.get("Bull", 0), 2)
+df_probs = pd.DataFrame({
+    "Regime": list(probs.keys()),
+    "Probability": list(probs.values())
 })
+
+st.bar_chart(df_probs.set_index("Regime"))
+
+st.progress(probs.get(prediction, 0))
