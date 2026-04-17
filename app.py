@@ -26,7 +26,7 @@ st.caption("Real-time AI-powered oil market analytics system")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal","Trading Signals","ML Prediction"]
+    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal","Trading Signals","ML Prediction","Regularization"]
 )
 
 # ---------------- LOAD ----------------
@@ -375,3 +375,46 @@ df_probs = pd.DataFrame({
 st.bar_chart(df_probs.set_index("Regime"))
 
 st.progress(probs.get(prediction, 0))
+
+
+
+elif page == "Regularization":
+
+    st.subheader("Ridge & Lasso Feature Analysis")
+
+    from src.regularization import run_regularization
+
+    # Example features (same as ML model)
+    features = ["returns", "volatility"]
+    X = data[features]
+    y = data["Regime_Code"]   # make sure encoded (0,1,2)
+
+    ridge_df, lasso_df = run_regularization(X, y)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("Ridge Regression")
+        st.dataframe(ridge_df)
+
+    with col2:
+        st.write("Lasso Regression")
+        st.dataframe(lasso_df)
+
+
+elif page == "Hypothesis Testing":
+
+    st.subheader("Market Volatility Hypothesis Test")
+
+    from src.hypothesis import volatility_test
+
+    current_vol, mean_vol, p_value = volatility_test(data["volatility"])
+
+    st.metric("Current Volatility", round(current_vol, 4))
+    st.metric("Historical Mean Volatility", round(mean_vol, 4))
+    st.metric("p-value", round(p_value, 4))
+
+    if p_value < 0.05:
+        st.error("Reject H0 → Market volatility is significantly different")
+    else:
+        st.success("Fail to Reject H0 → Market is normal")
