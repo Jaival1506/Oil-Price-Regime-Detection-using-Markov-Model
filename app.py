@@ -438,7 +438,9 @@ elif page == "Regularization":
     X = data[features].dropna()
     y = data.loc[X.index, "Regime_Code"]
 
-    ridge_df, lasso_df = run_regularization(X, y)
+    ridge_df, lasso_df, ridge_alpha, lasso_alpha = run_regularization(X, y)
+    st.write(f"Best Ridge Alpha: {round(ridge_alpha, 4)}")
+    st.write(f"Best Lasso Alpha: {round(lasso_alpha, 4)}")
 
     col1, col2 = st.columns(2)
 

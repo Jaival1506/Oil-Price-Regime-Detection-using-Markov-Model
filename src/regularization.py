@@ -1,32 +1,28 @@
-from sklearn.linear_model import Ridge, Lasso
-from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import RidgeCV, LassoCV
 import pandas as pd
+import numpy as np
 
 def run_regularization(X, y):
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    # Range of alpha values to test
+    alphas = np.logspace(-3, 3, 50)
 
-    # Ridge
-    ridge = Ridge(alpha=1.0)
-    ridge.fit(X_scaled, y)
-    ridge_coef = ridge.coef_
-
-    # Lasso
-    lasso = Lasso(alpha=0.01)
-    lasso.fit(X_scaled, y)
-    lasso_coef = lasso.coef_
-
-    feature_names = X.columns
+    # Ridge with CV
+    ridge = RidgeCV(alphas=alphas, cv=5)
+    ridge.fit(X, y)
 
     ridge_df = pd.DataFrame({
-        "Feature": feature_names,
-        "Ridge Coefficient": ridge_coef
+        "Feature": X.columns,
+        "Coefficient": ridge.coef_
     })
+
+    # Lasso with CV
+    lasso = LassoCV(alphas=alphas, cv=5, max_iter=10000)
+    lasso.fit(X, y)
 
     lasso_df = pd.DataFrame({
-        "Feature": feature_names,
-        "Lasso Coefficient": lasso_coef
+        "Feature": X.columns,
+        "Coefficient": lasso.coef_
     })
 
-    return ridge_df, lasso_df
+    return ridge_df, lasso_df, ridge.alpha_, lasso.alpha_
