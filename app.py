@@ -28,7 +28,8 @@ st.caption("Real-time AI-powered oil market analytics system")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast", "News Terminal","Trading Signals","ML Prediction","Regularization"]
+    ["Overview", "Data", "Market Analysis", "Markov Model", "Simulation", "Forecast",
+ "News Terminal", "Trading Signals", "ML Prediction", "Regularization", "Hypothesis Testing"]
 )
 
 # ---------------- LOAD ----------------
@@ -340,56 +341,59 @@ elif page == "News Terminal":
             st.markdown(f"[Read more]({article['url']})")
             st.markdown("---")
 
-
+# ---------------- TRADING SIGNALS ----------------
 elif page == "Trading Signals":
 
-   st.title("📊 Trading Signal Dashboard")
+    st.title("Trading Signal Dashboard")
 
-col1, col2, col3 = st.columns(3)
+    # Generate signal
+    signal, state, confidence, sentiment, volatility = generate_signal(data)
 
-col1.metric("Signal", signal)
-col2.metric("Market State", state)
-col3.metric("Confidence", round(confidence, 2))
+    col1, col2, col3 = st.columns(3)
 
-st.progress(confidence)
+    col1.metric("Signal", signal)
+    col2.metric("Market State", state)
+    col3.metric("Confidence", round(confidence, 2))
 
-st.subheader("📊 Market Drivers")
+    st.progress(confidence)
 
-col4, col5 = st.columns(2)
+    st.subheader("Market Drivers")
 
-col4.metric("News Sentiment", round(sentiment, 2))
-col5.metric("Volatility", round(volatility, 4))
+    col4, col5 = st.columns(2)
 
-st.info("Signal combines Markov regime + ML + News Sentiment")
+    col4.metric("News Sentiment", round(sentiment, 2))
+    col5.metric("Volatility", round(volatility, 4))
 
+    st.info("Signal combines Markov regime + ML + News Sentiment")
+
+
+# ---------------- ML PREDICTION ----------------
 elif page == "ML Prediction":
-st.subheader("AI-Based Market Prediction")
 
-st.metric("Predicted Next Regime", prediction)
+    st.subheader("AI-Based Market Prediction")
 
-st.subheader("Prediction Probabilities")
+    st.metric("Predicted Next Regime", prediction)
 
-df_probs = pd.DataFrame({
-    "Regime": list(probs.keys()),
-    "Probability": list(probs.values())
-})
+    st.subheader("Prediction Probabilities")
 
-st.bar_chart(df_probs.set_index("Regime"))
+    df_probs = pd.DataFrame({
+        "Regime": list(probs.keys()),
+        "Probability": list(probs.values())
+    })
 
-st.progress(probs.get(prediction, 0))
+    st.bar_chart(df_probs.set_index("Regime"))
+
+    st.progress(probs.get(prediction, 0))
 
 
-
+# ---------------- REGULARIZATION ----------------
 elif page == "Regularization":
 
     st.subheader("Ridge & Lasso Feature Analysis")
 
-    from src.regularization import run_regularization
-
-    # Example features (same as ML model)
-    features = ["returns", "volatility"]
+    features = ["Returns", "volatility"]   # FIXED column names
     X = data[features]
-    y = data["Regime_Code"]   # make sure encoded (0,1,2)
+    y = data["Regime_Code"]
 
     ridge_df, lasso_df = run_regularization(X, y)
 
@@ -404,11 +408,10 @@ elif page == "Regularization":
         st.dataframe(lasso_df)
 
 
+# ---------------- HYPOTHESIS ----------------
 elif page == "Hypothesis Testing":
 
     st.subheader("Market Volatility Hypothesis Test")
-
-    from src.hypothesis import volatility_test
 
     current_vol, mean_vol, p_value = volatility_test(data["volatility"])
 
