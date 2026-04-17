@@ -32,12 +32,6 @@ page = st.sidebar.radio(
  "News Terminal", "Trading Signals", "ML Prediction", "Regularization", "Hypothesis Testing"]
 )
 
-# Global feature engineering
-if "Returns" not in data.columns:
-    data["Returns"] = data["Close"].pct_change()
-
-data["volatility"] = data["Returns"].rolling(5).std()
-
 # ---------------- LOAD ----------------
 brent = load_brent("data/brent_data.csv")
 opec = load_opec("data/OPEC oil production.csv")
@@ -49,6 +43,8 @@ data = clean_data(data)
 data = add_returns(data)
 data = add_supply_shock(data)
 data = add_war_dummy(data)
+
+data["volatility"] = data["Returns"].rolling(5).std()
 
 data = create_states(data)
 ml_data = prepare_features(data)
@@ -382,9 +378,9 @@ elif page == "ML Prediction":
 
     st.subheader("Prediction Probabilities")
 
-    df_probs = probs.reset_index()
+    df_probs = probs.to_frame(name="Probability").reset_index()
     df_probs.columns = ["Regime", "Probability"]
-
+    
     st.bar_chart(df_probs.set_index("Regime"))
 
     prob_value = float(df_probs[df_probs["Regime"] == prediction]["Probability"].values[0])
