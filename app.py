@@ -25,16 +25,6 @@ st.set_page_config(layout="wide")
 
 st.title("Oil Market Intelligence System")
 st.caption("Real-time AI-powered oil market analytics system")
-st.markdown("### System Snapshot")
-st.set_page_config(layout="wide")
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("Price", round(data['Close'].iloc[-1], 2))
-col2.metric("Return %", round(data['Returns'].iloc[-1]*100, 2))
-col3.metric("Volatility", round(data['volatility'].iloc[-1], 4))
-col4.metric("State", current_state)
-
 
 page = st.sidebar.radio(
     "Navigation",
