@@ -390,9 +390,20 @@ elif page == "Regularization":
 
     st.subheader("Ridge & Lasso Feature Analysis")
 
-    features = ["Returns", "volatility"]   # FIXED column names
-    X = data[features]
-    y = data["Regime_Code"]
+    # Ensure required columns exist
+    data["volatility"] = data["Returns"].rolling(5).std()
+
+    if "Regime_Code" not in data.columns:
+        data["Regime_Code"] = data["State"].map({
+            "Bear": 0,
+            "Stable": 1,
+            "Bull": 2
+        })
+
+    features = ["Returns", "volatility"]
+
+    X = data[features].dropna()
+    y = data.loc[X.index, "Regime_Code"]
 
     ridge_df, lasso_df = run_regularization(X, y)
 
