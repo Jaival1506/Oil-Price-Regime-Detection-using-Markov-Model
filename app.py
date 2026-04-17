@@ -49,7 +49,7 @@ current_state = P.loc[last_state].idxmax()
 page = st.sidebar.radio("Navigation", [
     "Overview",
     "Market Snapshot",
-    "Market Regime",
+    "Regime & Simulation",
     "News Intelligence",
     "AI Prediction",
     "Trading Signals",
@@ -80,13 +80,56 @@ elif page == "Market Snapshot":
     st.line_chart(data['volatility'])
 
 # ---------------- MARKOV MODEL ----------------
-elif page == "Market Regime":
-    st.subheader("Markov Regime Detection")
+elif page == "Regime & Simulation":
+
+    st.subheader("Market Regime (Markov Model)")
 
     st.metric("Current Regime", current_state)
 
     fig = px.imshow(P, text_auto=True)
     st.plotly_chart(fig)
+
+    st.markdown("---")
+
+    # MONTE CARLO STATES
+    st.subheader("Monte Carlo State Simulation")
+
+    paths = simulate_multiple_paths(P, current_state, steps=15, n_simulations=50)
+
+    state_map = {'Bear': -1, 'Stable': 0, 'Bull': 1}
+
+    fig_mc = go.Figure()
+
+    for path in paths:
+        numeric = [state_map[s] for s in path]
+        fig_mc.add_trace(go.Scatter(y=numeric, opacity=0.2))
+
+    st.plotly_chart(fig_mc)
+
+    st.markdown("---")
+
+    # PRICE FORECAST
+    st.subheader("15-Day Price Forecast")
+
+    forecast = forecast_price(data, P)
+
+    fig_f = go.Figure()
+    fig_f.add_trace(go.Scatter(y=forecast, line=dict(color='cyan')))
+    st.plotly_chart(fig_f)
+
+    st.markdown("---")
+
+    # MONTE CARLO PRICE
+    st.subheader("Monte Carlo Price Simulation")
+
+    price_paths = monte_carlo_price(data, P, steps=15, simulations=50)
+
+    fig_price = go.Figure()
+
+    for path in price_paths:
+        fig_price.add_trace(go.Scatter(y=path, opacity=0.2))
+
+    st.plotly_chart(fig_price)
 
 # ---------------- NEWS ----------------
 elif page == "News Intelligence":
@@ -118,7 +161,10 @@ elif page == "AI Prediction":
 
     st.metric("Next Regime", prediction)
 
-    df_probs = probs.to_frame(name="Probability").reset_index()
+    df_probs = pd.DataFrame({
+    "Regime": list(probs.keys()),
+    "Probability": list(probs.values())
+})
     df_probs.columns = ["Regime", "Probability"]
 
     st.bar_chart(df_probs.set_index("Regime"))
