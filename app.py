@@ -48,13 +48,11 @@ current_state = P.loc[last_state].idxmax()
 # ---------------- NAVIGATION ----------------
 page = st.sidebar.radio("Navigation", [
     "Overview",
-    "Market Snapshot",
+    "Market Dashboard",
     "Regime & Simulation",
     "News Intelligence",
     "AI Prediction",
-    "Trading Signals",
-    "Model Insights",
-    "Hypothesis Testing"
+    "Strategy & Insights",
 ])
 
 # ---------------- OVERVIEW ----------------
@@ -170,46 +168,73 @@ elif page == "AI Prediction":
     st.bar_chart(df_probs.set_index("Regime"))
 
 # ---------------- SIGNALS ----------------
-elif page == "Trading Signals":
+elif page == "Strategy & Insights":
+
+    st.title("Strategy & Model Intelligence")
+
+    # ================= SIGNAL =================
     st.subheader("Trading Signal")
 
     signal, state, confidence, sentiment, volatility = generate_signal(data)
 
     col1, col2, col3 = st.columns(3)
+
     col1.metric("Signal", signal)
-    col2.metric("State", state)
-    col3.metric("Confidence", round(confidence,2))
+    col2.metric("Market State", state)
+    col3.metric("Confidence", round(confidence, 2))
 
-# ---------------- REGULARIZATION ----------------
-elif page == "Model Insights":
-    st.subheader("Ridge & Lasso")
+    st.progress(confidence)
 
-    data["Regime_Code"] = data["State"].map({"Bear":0,"Stable":1,"Bull":2})
+    st.markdown("---")
 
-    X = data[["Returns","volatility"]].dropna()
-    y = data.loc[X.index,"Regime_Code"]
+    # ================= DRIVERS =================
+    st.subheader("Key Drivers")
 
-    ridge_df, lasso_df, ridge_alpha, lasso_alpha = run_regularization(X,y)
+    col4, col5 = st.columns(2)
+    col4.metric("News Sentiment", round(sentiment, 2))
+    col5.metric("Volatility", round(volatility, 4))
+
+    st.info("Signal is based on Markov + ML + News Sentiment")
+
+    st.markdown("---")
+
+    # ================= FEATURE IMPORTANCE =================
+    st.subheader("Feature Importance (Ridge & Lasso)")
+
+    data["Regime_Code"] = data["State"].map({
+        "Bear": 0,
+        "Stable": 1,
+        "Bull": 2
+    })
+
+    X = data[["Returns", "volatility"]].dropna()
+    y = data.loc[X.index, "Regime_Code"]
+
+    ridge_df, lasso_df, ridge_alpha, lasso_alpha = run_regularization(X, y)
 
     st.caption(f"Ridge Alpha: {round(ridge_alpha,2)} | Lasso Alpha: {round(lasso_alpha,4)}")
 
-    col1, col2 = st.columns(2)
-    col1.dataframe(ridge_df)
-    col2.dataframe(lasso_df)
+    col6, col7 = st.columns(2)
 
-# ---------------- HYPOTHESIS ----------------
-elif page == "Hypothesis Testing":
+    col6.dataframe(ridge_df)
+    col7.dataframe(lasso_df)
+
+    st.markdown("---")
+
+    # ================= HYPOTHESIS TEST =================
     st.subheader("Volatility Hypothesis Test")
 
     vol = data["volatility"].dropna()
 
     current_vol, mean_vol, p_value = volatility_test(vol)
 
-    st.metric("Current Vol", round(current_vol,4))
-    st.metric("Mean Vol", round(mean_vol,4))
-    st.metric("P-Value", round(p_value,4))
+    col8, col9, col10 = st.columns(3)
+
+    col8.metric("Current Vol", round(current_vol, 4))
+    col9.metric("Mean Vol", round(mean_vol, 4))
+    col10.metric("P-Value", round(p_value, 4))
 
     if p_value < 0.05:
-        st.error("Significant change")
+        st.error("Significant volatility change (Reject H0)")
     else:
-        st.success("No significant change")
+        st.success("No significant change (Fail to reject H0)")
