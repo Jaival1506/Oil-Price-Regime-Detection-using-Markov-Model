@@ -18,6 +18,8 @@ from src.forecasting import forecast_price, monte_carlo_price
 from src.news import get_oil_news_range
 from src.trading_signals import generate_signal
 from src.ml_model import prepare_features, train_model, predict_next
+from src.regularization import run_regularization
+from src.hypothesis import volatility_test
 
 st.set_page_config(layout="wide")
 
