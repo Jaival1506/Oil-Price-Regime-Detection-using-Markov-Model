@@ -70,7 +70,7 @@ if page == "Overview":
     st.plotly_chart(fig, use_container_width=True)
 
 # ---------------- MARKET SNAPSHOT ----------------
-elif page == "Market Snapshot":
+elif page == "Market Dashboard":
     st.subheader("Market Overview")
 
     st.line_chart(data['Close'])
