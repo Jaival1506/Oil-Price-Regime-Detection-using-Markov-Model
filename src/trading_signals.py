@@ -1,20 +1,24 @@
-def generate_signal(state, confidence, sentiment):
+def generate_signal(data):
 
-    if state == "Bull":
-        if confidence > 0.6 and sentiment > 0.1:
-            return "STRONG BUY"
-        elif sentiment > 0:
-            return "BUY"
-        else:
-            return "HOLD"
+    # Latest values
+    state = data['State'].iloc[-1]
+    returns = data['Returns'].iloc[-1]
 
-    elif state == "Bear":
-        if confidence > 0.6 and sentiment < -0.1:
-            return "STRONG SELL "
-        elif sentiment < 0:
-            return "SELL "
-        else:
-            return "HOLD "
+    # Volatility
+    volatility = data['Returns'].rolling(5).std().iloc[-1]
 
+    # Dummy sentiment (replace later if needed)
+    sentiment = 0  
+
+    # Confidence (simple proxy)
+    confidence = abs(returns)
+
+    # Signal logic
+    if state == "Bull" and confidence > 0.01:
+        signal = "BUY"
+    elif state == "Bear" and confidence > 0.01:
+        signal = "SELL"
     else:
-        return "HOLD "
+        signal = "HOLD"
+
+    return signal, state, confidence, sentiment, volatility
