@@ -72,10 +72,24 @@ if page == "Overview":
 # ---------------- MARKET SNAPSHOT ----------------
 elif page == "Market Dashboard":
     st.subheader("Market Overview")
-
+    st.markdown("Brent Oil Price Trend")
+    st.caption("Shows historical price movement of crude oil")
+    
     st.line_chart(data['Close'])
+    
+    st.markdown("Daily Returns")
+    st.caption("Measures day-to-day price changes (market momentum)")
     st.line_chart(data['Returns'])
+    
+    st.markdown("Market Volatility")
+    st.caption("Rolling 5-day volatility indicating market risk")
     st.line_chart(data['volatility'])
+
+    st.info("""
+- Price shows long-term trend
+- Returns capture short-term fluctuations
+- Volatility spikes indicate market stress (e.g., crises)
+""")
 
 # ---------------- MARKOV MODEL ----------------
 elif page == "Regime & Simulation":
