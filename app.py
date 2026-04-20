@@ -227,15 +227,22 @@ elif page == "Strategy & Insights":
     st.pyplot(fig)
 
     # ================= FEATURE IMPORTANCE =================
-    st.subheader("Feature Selection & Validation (Lasso + VIF + OLS)")
+    st.subheader("⚙️ Feature Selection & Validation")
     result = run_regularization_pipeline(data)
-    st.write(f"Best Lasso Alpha: {round(result['best_alpha'], 5)}")
+    st.write(f"Best Alpha: {round(result['best_alpha'], 5)}")
     st.write("Selected Features:")
     st.write(result["selected_features"])
-    st.write("VIF Analysis:")
-    st.dataframe(result["vif"])
-    st.text("OLS Summary:")
-    st.text(result["summary"])
+    st.write("Correlation Matrix:")
+    st.dataframe(result["correlation_matrix"])
+    
+    if not result["high_correlation_pairs"].empty:
+        st.warning("Highly Correlated Features:")
+        st.dataframe(result["high_correlation_pairs"])
+    else:
+        st.success("No strong multicollinearity detected")
+        
+        st.text("OLS Summary:")
+        st.text(result["summary"])
 
     # ================= HYPOTHESIS TEST =================
     st.subheader("Hypothesis Testing (Volatility vs Returns)")
