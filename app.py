@@ -227,7 +227,7 @@ elif page == "Strategy & Insights":
     st.pyplot(fig)
 
     # ================= FEATURE IMPORTANCE =================
-    st.subheader("⚙️ Feature Selection & Validation")
+    st.subheader("Feature Selection & Validation")
     result = run_regularization_pipeline(data)
     st.write(f"Best Alpha: {round(result['best_alpha'], 5)}")
     st.write("Selected Features:")
