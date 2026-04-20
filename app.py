@@ -18,7 +18,7 @@ from src.forecasting import forecast_price, monte_carlo_price
 from src.news import get_oil_news_range
 from src.trading_signals import generate_signal
 from src.ml_model import prepare_features, train_model, predict_next
-from src.regularization import run_regularization
+from src.regularization import run_regularization_pipeline
 from src.hypothesis import volatility_regime_test
 
 # ---------------- CONFIG ----------------
@@ -213,27 +213,15 @@ elif page == "Strategy & Insights":
     st.markdown("---")
 
     # ================= FEATURE IMPORTANCE =================
-    st.subheader("Feature Importance (Ridge & Lasso)")
-
-    data["Regime_Code"] = data["State"].map({
-        "Bear": 0,
-        "Stable": 1,
-        "Bull": 2
-    })
-
-    X = data[["Returns", "volatility"]].dropna()
-    y = data.loc[X.index, "Regime_Code"]
-
-    ridge_df, lasso_df, ridge_alpha, lasso_alpha = run_regularization(X, y)
-
-    st.caption(f"Ridge Alpha: {round(ridge_alpha,2)} | Lasso Alpha: {round(lasso_alpha,4)}")
-
-    col6, col7 = st.columns(2)
-
-    col6.dataframe(ridge_df)
-    col7.dataframe(lasso_df)
-
-    st.markdown("---")
+    st.subheader("Feature Selection & Validation (Lasso + VIF + OLS)")
+    result = run_regularization_pipeline(data)
+    st.write(f"Best Lasso Alpha: {round(result['best_alpha'], 5)}")
+    st.write("Selected Features:")
+    st.write(result["selected_features"])
+    st.write("VIF Analysis:")
+    st.dataframe(result["vif"])
+    st.text("OLS Summary:")
+    st.text(result["summary"])
 
     # ================= HYPOTHESIS TEST =================
     st.subheader("Hypothesis Testing (Volatility vs Returns)")
