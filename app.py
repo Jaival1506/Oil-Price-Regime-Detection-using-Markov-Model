@@ -18,7 +18,6 @@ from src.simulation import simulate_multiple_paths
 from src.forecasting import forecast_price, monte_carlo_price
 from src.news import get_oil_news_range
 from src.trading_signals import generate_signal
-from src.ml_model import prepare_features, train_model, predict_next
 from src.regularization import run_regularization_pipeline
 from src.hypothesis import volatility_regime_test
 
@@ -38,10 +37,7 @@ data = add_war_dummy(data)
 data["volatility"] = data["Returns"].rolling(5).std()
 data = create_states(data)
 
-ml_data = prepare_features(data)
-model = train_model(ml_data)
-prediction, probs = predict_next(model, ml_data)
-
+# ---------------- MARKOV ----------------
 P = transition_matrix(data)
 last_state = data['State'].iloc[-1]
 current_state = P.loc[last_state].idxmax()
@@ -52,51 +48,49 @@ page = st.sidebar.radio("Navigation", [
     "Market Dashboard",
     "Regime & Simulation",
     "News Intelligence",
-    "AI Prediction",
-    "Strategy & Insights",
+    "Strategy & Insights"
 ])
 
 # ---------------- OVERVIEW ----------------
 if page == "Overview":
     st.title("Oil Market Intelligence System")
-    st.caption("AI-powered oil market decision system")
+    st.caption("Probabilistic and statistical analysis of oil markets")
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Price", round(data['Close'].iloc[-1], 2))
     col2.metric("Returns", round(data['Returns'].iloc[-1], 4))
-    col3.metric("State", current_state)
+    col3.metric("Current Regime", current_state)
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data.index, y=data['Close']))
     st.plotly_chart(fig, use_container_width=True)
 
-# ---------------- MARKET SNAPSHOT ----------------
+# ---------------- MARKET DASHBOARD ----------------
 elif page == "Market Dashboard":
     st.subheader("Market Overview")
-    st.markdown("Brent Oil Price Trend")
+
+    st.markdown("### Brent Oil Price Trend")
     st.caption("Shows historical price movement of crude oil")
-    
     st.line_chart(data['Close'])
-    
-    st.markdown("Daily Returns")
-    st.caption("Measures day-to-day price changes (market momentum)")
+
+    st.markdown("### Daily Returns")
+    st.caption("Measures day-to-day price changes")
     st.line_chart(data['Returns'])
-    
-    st.markdown("Market Volatility")
-    st.caption("Rolling 5-day volatility indicating market risk")
+
+    st.markdown("### Market Volatility")
+    st.caption("Rolling 5-day volatility")
     st.line_chart(data['volatility'])
 
     st.info("""
-- Price shows long-term trend
-- Returns capture short-term fluctuations
-- Volatility spikes indicate market stress (e.g., crises)
+- Price shows long-term trend  
+- Returns capture short-term movement  
+- Volatility shows market risk  
 """)
 
-# ---------------- MARKOV MODEL ----------------
+# ---------------- REGIME & SIMULATION ----------------
 elif page == "Regime & Simulation":
 
     st.subheader("Market Regime (Markov Model)")
-
     st.metric("Current Regime", current_state)
 
     fig = px.imshow(P, text_auto=True)
@@ -104,15 +98,13 @@ elif page == "Regime & Simulation":
 
     st.markdown("---")
 
-    # MONTE CARLO STATES
+    # Monte Carlo States
     st.subheader("Monte Carlo State Simulation")
 
     paths = simulate_multiple_paths(P, current_state, steps=15, n_simulations=50)
-
     state_map = {'Bear': -1, 'Stable': 0, 'Bull': 1}
 
     fig_mc = go.Figure()
-
     for path in paths:
         numeric = [state_map[s] for s in path]
         fig_mc.add_trace(go.Scatter(y=numeric, opacity=0.2))
@@ -121,24 +113,23 @@ elif page == "Regime & Simulation":
 
     st.markdown("---")
 
-    # PRICE FORECAST
+    # Forecast
     st.subheader("15-Day Price Forecast")
 
     forecast = forecast_price(data, P)
 
     fig_f = go.Figure()
-    fig_f.add_trace(go.Scatter(y=forecast, line=dict(color='cyan')))
+    fig_f.add_trace(go.Scatter(y=forecast))
     st.plotly_chart(fig_f)
 
     st.markdown("---")
 
-    # MONTE CARLO PRICE
+    # Monte Carlo Price
     st.subheader("Monte Carlo Price Simulation")
 
     price_paths = monte_carlo_price(data, P, steps=15, simulations=50)
 
     fig_price = go.Figure()
-
     for path in price_paths:
         fig_price.add_trace(go.Scatter(y=path, opacity=0.2))
 
@@ -146,11 +137,12 @@ elif page == "Regime & Simulation":
 
 # ---------------- NEWS ----------------
 elif page == "News Intelligence":
-    st.subheader("Oil News Intelligence")
+
+    st.subheader("Oil Market News")
 
     from datetime import date
-    start_date = st.date_input("Start Date", value=date(2026,4,10))
-    end_date = st.date_input("End Date", value=date(2026,4,14))
+    start_date = st.date_input("Start Date", value=date(2026, 4, 10))
+    end_date = st.date_input("End Date", value=date(2026, 4, 14))
 
     news_data = get_oil_news_range(start_date, end_date)
 
@@ -158,9 +150,11 @@ elif page == "News Intelligence":
         st.markdown(f"### {d}")
 
         for article in news_data[d]:
-            if article["sentiment"] > 0:
+            sentiment = article["sentiment"]
+
+            if sentiment > 0:
                 st.success(article["title"])
-            elif article["sentiment"] < 0:
+            elif sentiment < 0:
                 st.error(article["title"])
             else:
                 st.write(article["title"])
@@ -168,32 +162,17 @@ elif page == "News Intelligence":
             st.caption(article["source"])
             st.markdown(f"[Read more]({article['url']})")
 
-# ---------------- ML ----------------
-elif page == "AI Prediction":
-    st.subheader("AI Prediction")
-
-    st.metric("Next Regime", prediction)
-
-    df_probs = pd.DataFrame({
-    "Regime": list(probs.keys()),
-    "Probability": list(probs.values())
-})
-    df_probs.columns = ["Regime", "Probability"]
-
-    st.bar_chart(df_probs.set_index("Regime"))
-
-# ---------------- SIGNALS ----------------
+# ---------------- STRATEGY & INSIGHTS ----------------
 elif page == "Strategy & Insights":
 
-    st.title("Strategy & Model Intelligence")
+    st.title("Strategy & Model Insights")
 
-    # ================= SIGNAL =================
+    # SIGNAL
     st.subheader("Trading Signal")
 
     signal, state, confidence, sentiment, volatility = generate_signal(data)
 
     col1, col2, col3 = st.columns(3)
-
     col1.metric("Signal", signal)
     col2.metric("Market State", state)
     col3.metric("Confidence", round(confidence, 2))
@@ -202,62 +181,74 @@ elif page == "Strategy & Insights":
 
     st.markdown("---")
 
-    # ================= DRIVERS =================
+    # DRIVERS
     st.subheader("Key Drivers")
 
     col4, col5 = st.columns(2)
     col4.metric("News Sentiment", round(sentiment, 2))
     col5.metric("Volatility", round(volatility, 4))
 
-    st.info("Signal is based on Markov + ML + News Sentiment")
+    st.info("Signal is based on Markov + Sentiment + Volatility")
 
     st.markdown("---")
-    # ================= RegPlot =================
-    st.subheader("Returns vs Volatility (Regression Analysis)")
+
+    # REGPLOT (SAFE)
+    st.subheader("Returns vs Volatility")
+
+    data_clean = data.dropna(subset=["Returns", "volatility"])
+
     fig, ax = plt.subplots()
     sns.regplot(
-    x=data["volatility"],
-    y=data["Returns"],
-    ax=ax,
-    scatter_kws={"alpha": 0.3},
-    line_kws={"color": "red"})
+        x=data_clean["volatility"],
+        y=data_clean["Returns"],
+        ax=ax,
+        scatter_kws={"alpha": 0.3},
+        line_kws={"color": "red"}
+    )
+
     ax.set_xlabel("Volatility")
     ax.set_ylabel("Returns")
     ax.set_title("Relationship between Volatility and Returns")
+
     st.pyplot(fig)
 
-    # ================= FEATURE IMPORTANCE =================
+    st.markdown("---")
+
+    # REGULARIZATION
     st.subheader("Feature Selection & Validation")
+
     result = run_regularization_pipeline(data)
+
     st.write(f"Best Alpha: {round(result['best_alpha'], 5)}")
-    st.write("Selected Features:")
-    st.write(result["selected_features"])
+    st.write("Selected Features:", result["selected_features"])
+
     st.write("Correlation Matrix:")
     st.dataframe(result["correlation_matrix"])
-    
+
     if not result["high_correlation_pairs"].empty:
         st.warning("Highly Correlated Features:")
         st.dataframe(result["high_correlation_pairs"])
     else:
         st.success("No strong multicollinearity detected")
-        
-        st.text("OLS Summary:")
-        st.text(result["summary"])
 
-    # ================= HYPOTHESIS TEST =================
-    st.subheader("Hypothesis Testing (Volatility vs Returns)")
+    st.text("OLS Summary:")
+    st.text(result["summary"])
 
-    result = volatility_regime_test(data)
+    st.markdown("---")
+
+    # HYPOTHESIS TEST
+    st.subheader("Hypothesis Testing")
+
+    result_test = volatility_regime_test(data)
 
     col1, col2 = st.columns(2)
+    col1.metric("High Vol Mean Return", round(result_test["mean_high"], 5))
+    col2.metric("Low Vol Mean Return", round(result_test["mean_low"], 5))
 
-    col1.metric("High Vol Mean Return", round(result["mean_high"], 5))
-    col2.metric("Low Vol Mean Return", round(result["mean_low"], 5))
+    st.write(f"T-Statistic: {round(result_test['t_stat'], 4)}")
+    st.write(f"P-Value: {round(result_test['p_value'], 5)}")
 
-    st.write(f"T-Statistic: {round(result['t_stat'], 4)}")
-    st.write(f"P-Value: {round(result['p_value'], 5)}")
-
-    if result["decision"] == "Reject H0":
+    if result_test["decision"] == "Reject H0":
         st.error("Reject H0 → Returns differ significantly across volatility regimes")
     else:
         st.success("Fail to Reject H0 → No strong difference in returns")
