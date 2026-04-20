@@ -18,14 +18,10 @@ def run_regularization_pipeline(data):
     df = df.dropna()
 
     # Target (Regime encoded)
-    df["Regime_Code"] = df["State"].map({
-        "Bear": 0,
-        "Stable": 1,
-        "Bull": 2
-    })
-
+    df["Target"] = df["Returns"].shift(-1)  # next-day return
+    df = df.dropna()
     X = df[["Returns", "volatility"]]
-    y = df["Regime_Code"]
+    y = df["Target"]
 
     # ---------- LASSO CV ----------
     lasso_cv = LassoCV(cv=5, max_iter=10000)
