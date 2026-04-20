@@ -13,7 +13,7 @@ def run_regularization_pipeline(data):
     df["Returns"] = df["Close"].pct_change()
     df["volatility"] = df["Returns"].rolling(5).std()
     df["MA_10"] = df["Close"].rolling(10).mean()
-    df["MA_20"] = df["Close"].rolling(20).mean()
+    df["MA_50"] = df["Close"].rolling(50).mean()
     df["Momentum"] = df["Close"] - df["Close"].shift(5)
 
     df = df.dropna()
@@ -23,7 +23,7 @@ def run_regularization_pipeline(data):
     df = df.dropna()
 
     # ---------- FEATURES ----------
-    feature_cols = ["Returns", "volatility", "MA_10", "MA_20", "Momentum"]
+    feature_cols = ["Returns", "volatility", "MA_10", "MA_50", "Momentum"]
 
     X = df[feature_cols]
     y = df["Target"]
