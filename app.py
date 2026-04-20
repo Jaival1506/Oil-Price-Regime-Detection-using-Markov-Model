@@ -8,6 +8,7 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from src.load_data import load_brent, load_opec
 from src.preprocess import clean_data, add_returns
@@ -211,6 +212,19 @@ elif page == "Strategy & Insights":
     st.info("Signal is based on Markov + ML + News Sentiment")
 
     st.markdown("---")
+    # ================= RegPlot =================
+    st.subheader("Returns vs Volatility (Regression Analysis)")
+    fig, ax = plt.subplots()
+    sns.regplot(
+    x=data["volatility"],
+    y=data["Returns"],
+    ax=ax,
+    scatter_kws={"alpha": 0.3},
+    line_kws={"color": "red"})
+    ax.set_xlabel("Volatility")
+    ax.set_ylabel("Returns")
+    ax.set_title("Relationship between Volatility and Returns")
+    st.pyplot(fig)
 
     # ================= FEATURE IMPORTANCE =================
     st.subheader("Feature Selection & Validation (Lasso + VIF + OLS)")
