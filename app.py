@@ -110,39 +110,6 @@ elif page == "Market Dashboard":
 
     st.plotly_chart(fig_supply, use_container_width=True)
 
-    # EVENTS GRAPH
-    st.markdown("### Global Events Impact")
-
-    fig_events = go.Figure()
-    fig_events.add_trace(go.Scatter(x=data.index, y=data['Close'], name="Price"))
-    fig_events.add_trace(go.Scatter(
-        x=data.index,
-        y=data[supply_col],
-        name="Supply",
-        yaxis="y2"
-    ))
-
-    fig_events.add_vline(
-    x=pd.to_datetime("2020-03-01"),
-    line_dash="dash",
-    annotation_text="COVID Crash")
-    
-    fig_events.add_vline(
-    x=pd.to_datetime("2022-02-24"),
-    line_dash="dash",
-    annotation_text="Russia-Ukraine War")
-    
-    fig_events.add_vline(
-    x=pd.to_datetime("2024-03-20"),
-    line_dash="dash",
-    annotation_text="Iran-Israel Tension")
-
-    fig_events.update_layout(
-        yaxis=dict(title="Price"),
-        yaxis2=dict(title="Supply", overlaying='y', side='right'))
-
-    st.plotly_chart(fig_events, use_container_width=True)
-
 # ---------------- REGIME & SIMULATION ----------------
 elif page == "Regime & Simulation":
 
