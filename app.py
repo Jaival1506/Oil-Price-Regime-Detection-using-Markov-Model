@@ -86,6 +86,66 @@ elif page == "Market Dashboard":
 - Returns capture short-term movement  
 - Volatility shows market risk  
 """)
+    
+    st.markdown("Oil Supply vs Price")
+    st.caption("Relationship between global oil supply and crude oil price")
+    fig_supply = go.Figure()
+    fig_supply.add_trace(go.Scatter(
+    x=data.index,
+    y=data['Close'],
+    name="Oil Price",
+    yaxis="y1"))
+    
+    fig_supply.add_trace(go.Scatter(
+    x=data.index,
+    y=data['OPEC Production'],  # ensure column name matches your dataset
+    name="Supply",
+    yaxis="y2"))
+    
+    fig_supply.update_layout(
+    yaxis=dict(title="Price"),
+    yaxis2=dict(title="Supply", overlaying='y', side='right'),
+    legend=dict(x=0, y=1))
+    
+    st.plotly_chart(fig_supply, use_container_width=True)
+
+    st.markdown("Impact of Major Global Events on Oil Market")
+    fig_events = go.Figure()
+    # Price
+    fig_events.add_trace(go.Scatter(
+    x=data.index,
+    y=data['Close'],
+    name="Oil Price"))
+    
+    fig_events.add_trace(go.Scatter(
+    x=data.index,
+    y=data['OPEC Production'],
+    name="Supply",
+    yaxis="y2"))
+    
+    fig_events.add_vline(
+    x="2020-03-01",
+    line_dash="dash",
+    annotation_text="COVID Crash",
+    annotation_position="top left")
+    
+    fig_events.add_vline(
+    x="2022-02-24",
+    line_dash="dash",
+    annotation_text="Russia-Ukraine War",
+    annotation_position="top left")
+    
+    fig_events.add_vline(
+    x="2024-03-20",
+    line_dash="dash",
+    annotation_text="Iran-Israel Tension",
+    annotation_position="top left")
+    
+    fig_events.update_layout(
+    yaxis=dict(title="Price"),
+    yaxis2=dict(title="Supply", overlaying='y', side='right'))
+    
+    st.plotly_chart(fig_events, use_container_width=True)
 
 # ---------------- REGIME & SIMULATION ----------------
 elif page == "Regime & Simulation":
