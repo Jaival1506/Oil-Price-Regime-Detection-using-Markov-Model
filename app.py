@@ -19,7 +19,7 @@ from src.news import get_oil_news_range
 from src.trading_signals import generate_signal
 from src.ml_model import prepare_features, train_model, predict_next
 from src.regularization import run_regularization
-from src.hypothesis import volatility_test
+from src.hypothesis import volatility_regime_test
 
 # ---------------- CONFIG ----------------
 st.set_page_config(layout="wide")
@@ -236,19 +236,19 @@ elif page == "Strategy & Insights":
     st.markdown("---")
 
     # ================= HYPOTHESIS TEST =================
-    st.subheader("Volatility Hypothesis Test")
+    st.subheader("Hypothesis Testing (Volatility vs Returns)")
 
-    vol = data["volatility"].dropna()
+    result = volatility_regime_test(data)
 
-    current_vol, mean_vol, p_value = volatility_test(vol)
+    col1, col2 = st.columns(2)
 
-    col8, col9, col10 = st.columns(3)
+    col1.metric("High Vol Mean Return", round(result["mean_high"], 5))
+    col2.metric("Low Vol Mean Return", round(result["mean_low"], 5))
 
-    col8.metric("Current Vol", round(current_vol, 4))
-    col9.metric("Mean Vol", round(mean_vol, 4))
-    col10.metric("P-Value", round(p_value, 4))
+    st.write(f"T-Statistic: {round(result['t_stat'], 4)}")
+    st.write(f"P-Value: {round(result['p_value'], 5)}")
 
-    if p_value < 0.05:
-        st.error("Significant volatility change (Reject H0)")
+    if result["decision"] == "Reject H0":
+        st.error("Reject H0 → Returns differ significantly across volatility regimes")
     else:
-        st.success("No significant change (Fail to reject H0)")
+        st.success("Fail to Reject H0 → No strong difference in returns")
