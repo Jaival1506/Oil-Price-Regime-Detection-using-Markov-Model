@@ -98,7 +98,7 @@ elif page == "Market Dashboard":
     
     fig_supply.add_trace(go.Scatter(
     x=data.index,
-    y=data['OPEC Production'],  # ensure column name matches your dataset
+    y=data['OPEC Oil Production (Mb/d)'],  # ensure column name matches your dataset
     name="Supply",
     yaxis="y2"))
     
@@ -119,7 +119,7 @@ elif page == "Market Dashboard":
     
     fig_events.add_trace(go.Scatter(
     x=data.index,
-    y=data['OPEC Production'],
+    y=data['OPEC Oil Production (Mb/d)'],
     name="Supply",
     yaxis="y2"))
     
@@ -290,9 +290,6 @@ elif page == "Strategy & Insights":
         st.dataframe(result["high_correlation_pairs"])
     else:
         st.success("No strong multicollinearity detected")
-
-    st.text("OLS Summary:")
-    st.text(result["summary"])
 
     st.markdown("---")
 
